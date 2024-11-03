@@ -12,17 +12,16 @@ However, if you roll a raven, then the black raven will move one step along the 
 This a standard application of calculating absorbing probabilities in an absorbing Markov chain; see
 https://en.wikipedia.org/wiki/Absorbing_Markov_chain .
 
-Our result is that the best strategy seems to be to pick a random tree if you land on a basket die value. The seemingly
-best strategy (choosing the tree with the maximum fruit) turns out to be the worst. This seems counterintuitive as it
-should waste less turns towards the end of the game, but I guess not!
-"""
+Alternate computational approach: dynamic programming; see 
+https://math.stackexchange.com/questions/1955888/odds-of-winning-orchard-game
+
+Our result is that the best strategy is indeed the most plentiful tree."""
 # TODO:
 # - Dependence on n, T, R.
 # - Confirm by simulating the game: DONE.
 # - How does result sit with #turns for raven to each 5 ~ 5 * 6 = 30; # turns to clear all fruit ~ 16 * (6/5) = 19.2
 # except for wasted turns on empty trees, so winning probability seems a lot higher (more than 50%). Answer: there are
 # a lot of wasted turns towards the end of the game when trees are nearly empty.
-# - Effect of strategy: looks like RANDOM > MIN_TREE > MAX_TREE. Why?
 
 import argparse
 import itertools
@@ -47,7 +46,8 @@ class Strategy(Enum):
     MIN_TREE = 1
     # Random tree with fruits.
     RANDOM = 2
-
+    # Fixed tree.
+    FIXED = 3.
 
 class FirstOrchardSimulator:
     def __init__(self, n: int, t_max: int, r_max: int, strategy: Strategy, rng: np.random.Generator) -> int:
@@ -81,7 +81,7 @@ class FirstOrchardSimulator:
                 if self._strategy == Strategy.MAX_TREE:
                     # Strategy A: we assume the strategy is to pick a fruit from the tree with the most fruit to minimize
                     # the chance of an empty tree in rule 1, which would mean a wasted turn.
-                    i = np.argmax(s[-1])
+                    i = np.argmax(s[:-1])
                 elif self._strategy == Strategy.MIN_TREE:
                     # Strategy B: choose the tree with the least fruits.
                     nonempty_tree_idx = np.argwhere(s[:-1] > 0)
@@ -90,6 +90,10 @@ class FirstOrchardSimulator:
                     # Strategy C: choose a random tree with fruits.
                     nonempty_tree_idx = np.argwhere(s[:-1] > 0).flatten()
                     i = np.random.choice(nonempty_tree_idx)
+                elif self._strategy == Strategy.FIXED:
+                    # Strategy D: choose your favorite color (from the trees with fruits).
+                    nonempty_tree_idx = np.argwhere(s[:-1] > 0).flatten()
+                    i = nonempty_tree_idx[0]
                 else:
                     raise ValueError(f"Invalid strategy value {self._strategy}")
             else:
@@ -157,7 +161,7 @@ class FirstOrchardAnalyzer:
                 if self._strategy == Strategy.MAX_TREE:
                     # Strategy A: we assume the strategy is to pick a fruit from the tree with the most fruit to minimize
                     # the chance of an empty tree in rule 1, which would mean a wasted turn.
-                    i = np.argmax(state[-1])
+                    i = np.argmax(state[:-1])
                 elif self._strategy == Strategy.MIN_TREE:
                     # Strategy B: choose the tree with the least fruits.
                     state_array = np.array(state, dtype=int)
@@ -170,6 +174,11 @@ class FirstOrchardAnalyzer:
                     state_array = np.array(state, dtype=int)
                     nonempty_tree_idx = np.argwhere(state_array[:-1] > 0).flatten()
                     i = np.random.choice(nonempty_tree_idx)
+                elif self._strategy == Strategy.FIXED:
+                    # Strategy D: choose your favorite color (from the trees with fruits).
+                    state_array = np.array(state, dtype=int)
+                    nonempty_tree_idx = np.argwhere(state_array[:-1] > 0).flatten()
+                    i = nonempty_tree_idx[0]
                 else:
                     raise ValueError(f"Invalid strategy value {self._strategy}")
                 q_edges.append((s[state], s[state[:i] + (max(0, state[i] - 1), ) + state[i+1:]], p))
