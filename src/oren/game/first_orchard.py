@@ -11,6 +11,10 @@ However, if you roll a raven, then the black raven will move one step along the 
 
 This a standard application of calculating absorbing probabilities in an absorbing Markov chain; see
 https://en.wikipedia.org/wiki/Absorbing_Markov_chain .
+
+Our result is that the best strategy seems to be to pick a random tree if you land on a basket die value. The seemingly
+best strategy (choosing the tree with the maximum fruit) turns out to be the worst. This seems counterintuitive as it
+should waste less turns towards the end of the game, but I guess not!
 """
 # TODO:
 # - Dependence on n, T, R.
@@ -160,7 +164,9 @@ class FirstOrchardAnalyzer:
                     nonempty_tree_idx = np.argwhere(state_array[:-1] > 0)
                     i = nonempty_tree_idx[np.argmin(state_array[nonempty_tree_idx])][0]
                 elif self._strategy == Strategy.RANDOM:
-                    # Strategy C: choose a random tree with fruits.
+                    # Strategy C: choose a random tree with fruits. In this analysis mode, this is only an approximation;
+                    # one should really average over different random graphs instead of generating just one, but it looks
+                    # like even one with random edges fits the experimental result quite nicely.
                     state_array = np.array(state, dtype=int)
                     nonempty_tree_idx = np.argwhere(state_array[:-1] > 0).flatten()
                     i = np.random.choice(nonempty_tree_idx)
@@ -211,6 +217,7 @@ if __name__ == "__main__":
         print(f"Experimental probability: {np.bincount(result)[WIN] / num_simulations:.3f}")
         
         # Analysis.
+        rng = np.random.default_rng(seed=int(time.time()))
         analyzer = FirstOrchardAnalyzer(args.n, args.t, args.r, strategy)
         q, a = analyzer.transition_matrices()
         # p  = scs.hstack((q, a))
