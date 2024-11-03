@@ -1,0 +1,14 @@
+# Minimum environment for running the code.
+name: game
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - jupyterlab
+  - ipython
+  - matplotlib
+  - networkx
+  - pandas
+  - python
+  - scipy
+prefix: /Users/olivne/opt/miniconda3/envs/game

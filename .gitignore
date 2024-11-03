@@ -1,0 +1,16 @@
+.idea
+**/*.dvi
+**/__pycache__
+**/.ipynb_checkpoints
+**/.idea
+**/.project
+**/.pydevproject
+**/*.egg-info
+**/*~
+**/*.pyc
+**/.pytest_cache
+**/.cache
+build
+build-docs
+out
+blunderbase/blunderbase/*.sqlite
